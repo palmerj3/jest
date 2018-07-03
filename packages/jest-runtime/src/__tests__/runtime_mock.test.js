@@ -47,6 +47,21 @@ describe('Runtime', () => {
         ).toEqual(mockReference);
       }));
 
+    it('supports wildcard mocking', () =>
+      createRuntime(__filename).then(runtime => {
+        const mockReference = {isMock: true};
+        const root = runtime.requireModule(runtime.__mockRootPath, rootJsPath);
+        // Erase module registry because root.js requires most other modules.
+        root.jest.resetModuleRegistry();
+
+        // Mock wildcard and match jest-runtime against it
+        root.jest.mock('jest-*', () => mockReference);
+
+        expect(
+          runtime.requireModuleOrMock(runtime.__mockRootPath, 'jest-junit'),
+        ).toEqual(mockReference);
+      }));
+
     it('sets virtual mock for non-existing module required from same directory', () =>
       createRuntime(__filename).then(runtime => {
         const mockReference = {isVirtualMock: true};

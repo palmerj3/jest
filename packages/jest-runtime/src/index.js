@@ -16,6 +16,8 @@ import type {Jest, LocalModuleRequire} from 'types/Jest';
 import type {ModuleMap} from 'jest-haste-map';
 import type {MockFunctionMetadata, ModuleMocker} from 'types/Mock';
 import type {SourceMapRegistry} from 'types/SourceMaps';
+const wildcardResolver = require('resolve-dep');
+const findRoot = require('find-root');
 
 import path from 'path';
 import HasteMap from 'jest-haste-map';
@@ -778,16 +780,44 @@ class Runtime {
       mockFactory?: Object,
       options?: {virtual: boolean},
     ) => {
-      if (mockFactory !== undefined) {
-        return setMockFactory(moduleName, mockFactory, options);
+      let mocks = [];
+
+      if (moduleName.includes('*')) {
+        // Wildcard mock
+        mocks = wildcardResolver(moduleName).map(m => {
+          const root = findRoot(m);
+          let moduleName = m;
+
+          if (findRoot(m)) {
+            moduleName = path.basename(root);
+          }
+
+          return {
+            mockFactory,
+            moduleName,
+            options,
+          };
+        });
+      } else {
+        mocks.push({mockFactory, moduleName, options});
       }
 
-      const moduleID = this._resolver.getModuleID(
-        this._virtualMocks,
-        from,
-        moduleName,
-      );
-      this._explicitShouldMock[moduleID] = true;
+      for (let i = 0; i < mocks.length; i++) {
+        const m = mocks[i];
+
+        if (m.mockFactory !== undefined) {
+          setMockFactory(m.moduleName, m.mockFactory, m.options);
+          continue;
+        }
+
+        const moduleID = this._resolver.getModuleID(
+          this._virtualMocks,
+          from,
+          m.moduleName,
+        );
+        this._explicitShouldMock[moduleID] = true;
+      }
+
       return jestObject;
     };
     const setMockFactory = (moduleName, mockFactory, options) => {
