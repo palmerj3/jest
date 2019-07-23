@@ -122,6 +122,12 @@ export interface Jest {
    * automatic mock's behavior.
    */
   genMockFromModule(moduleName: string): unknown;
+
+  /**
+   * Retrieve the current jest configuration
+   */
+  getConfig(): Config.ProjectConfig;
+
   /**
    * Determines if the given function is a mocked function.
    */

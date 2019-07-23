@@ -66,4 +66,14 @@ describe('Runtime', () => {
         expect(mock2).not.toBeCalled();
       }));
   });
+
+  describe('jest.getConfig', () => {
+    it('returns copy of project config', () => {
+      createRuntime(__filename).then(runtime => {
+        const root = runtime.requireModule(runtime.__mockRootPath);
+
+        expect(root.jest.getConfig()).toBeDefined();
+      });
+    });
+  });
 });

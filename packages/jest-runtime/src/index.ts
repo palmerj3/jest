@@ -1049,6 +1049,7 @@ class Runtime {
       fn,
       genMockFromModule: (moduleName: string) =>
         this._generateMock(from, moduleName),
+      getConfig: () => Object.assign({}, this._config),
       getTimerCount: () => _getFakeTimers().getTimerCount(),
       isMockFunction: this._moduleMocker.isMockFunction,
       isolateModules,
